@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(\\(Get-Content src\\\\renderer\\\\app.js | Measure-Object -Line\\).Lines; Select-String -Path src\\\\renderer\\\\app.js -Pattern \"COVER_RATIO\" | Select-Object -First 3)",
+      "PowerShell(Get-Item src\\\\renderer\\\\assets\\\\logo.png | Select-Object Name, Length; python -c \"\" 2>$null; Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\\(Resolve-Path 'src\\\\renderer\\\\assets\\\\logo.png'\\)\\); \"$\\($img.Width\\) x $\\($img.Height\\)\"; $img.Dispose\\(\\))"
+    ]
+  }
+}

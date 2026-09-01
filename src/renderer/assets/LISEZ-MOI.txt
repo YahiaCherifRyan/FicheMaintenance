@@ -1,0 +1,17 @@
+Logo de couverture
+==================
+
+Depose ici le logo officiel qui doit apparaitre en haut de la premiere page
+du PDF. Le fichier doit s'appeler exactement :
+
+    logo.png     (recommande : PNG a fond transparent, 600 px de large minimum)
+
+Formats acceptes, dans cet ordre de priorite :
+    logo.png, logo.svg, logo.jpg, logo.jpeg
+
+Le fichier est lu par le processus principal (src/main/main.js) au premier
+export et mis en cache pour la duree de la session : si tu remplaces le
+logo, relance l'application.
+
+Si aucun fichier n'est present, la couverture s'affiche simplement sans logo,
+sans erreur.

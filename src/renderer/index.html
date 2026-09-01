@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Fiches Maintenance</title>
+<!-- App 100% hors-ligne : rien n'est jamais charge en dehors du bundle local
+     (pas de CDN, pas de police distante). 'self' couvre aussi l'iframe
+     d'apercu (srcdoc), qui herite de cette policy — d'ou 'unsafe-inline' sur
+     style-src : reportTemplate.js y injecte son CSS dans un <style> inline. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- ECRAN D'ACCUEIL -->
+  <section id="screen-home" class="screen active">
+    <div class="home-card">
+      <h1>Fiches de maintenance</h1>
+
+      <div class="home-tabs">
+        <button type="button" class="home-tab-btn active" data-home-tab="new">Nouvelle fiche</button>
+        <button type="button" class="home-tab-btn" data-home-tab="library">
+          Fiches enregistrées <span id="libraryCount" class="badge">0</span>
+        </button>
+      </div>
+
+      <div id="home-tab-new" class="home-panel active">
+      <p class="subtitle">Renseignez les informations de l'intervention pour commencer.</p>
+      <form id="homeForm" novalidate>
+        <div class="field">
+          <label for="ficheTechnicien">Nom du technicien *</label>
+          <input type="text" id="ficheTechnicien" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="ficheSite">Nom du site *</label>
+          <input type="text" id="ficheSite" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="ficheAdresse">Adresse du site *</label>
+          <input type="text" id="ficheAdresse" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="ficheDate">Date *</label>
+          <input type="date" id="ficheDate">
+        </div>
+        <div class="field">
+          <label for="ficheTelephone">Téléphone (facultatif)</label>
+          <input type="tel" id="ficheTelephone" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="ficheEmail">Email (facultatif)</label>
+          <input type="email" id="ficheEmail" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label>Photo du site (facultatif)</label>
+          <div class="photo-picker">
+            <div class="photo-picker-preview" id="homePhotoPreview">
+              <span class="photo-picker-empty">Aucune photo — la couverture utilisera un bandeau de couleur</span>
+            </div>
+            <div class="photo-picker-actions">
+              <button type="button" id="btnHomePhotoPick" class="btn btn-small btn-secondary">Choisir une photo</button>
+              <button type="button" id="btnHomePhotoRemove" class="btn btn-small btn-ghost hidden">Retirer</button>
+            </div>
+            <input type="file" id="homePhotoInput" class="hidden" accept="image/*">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large btn-block">Commencer la fiche</button>
+      </form>
+      </div>
+
+      <div id="home-tab-library" class="home-panel">
+        <p class="subtitle">Rouvrez une fiche pour la compléter, ou repartez de celle d'une visite précédente.</p>
+        <div class="library-toolbar">
+          <input type="text" id="librarySearch" placeholder="Rechercher un site, une adresse, un technicien…" autocomplete="off">
+          <button type="button" id="btnImportFiche" class="btn btn-secondary" title="Importer une fiche exportée depuis un autre poste">Importer une fiche…</button>
+        </div>
+        <div id="libraryBreadcrumb" class="library-breadcrumb"></div>
+        <div id="libraryFolders" class="library-folder-grid"></div>
+        <div id="libraryList" class="library-file-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ECRAN FICHE -->
+  <section id="screen-fiche" class="screen">
+    <header class="app-header">
+      <div class="app-header-title">Fiches Maintenance</div>
+      <div class="app-header-meta" id="ficheRecap"></div>
+      <button type="button" id="btnEditInfos" class="btn btn-secondary btn-small">Modifier les infos</button>
+      <button type="button" id="btnNewFiche" class="btn btn-ghost">Nouvelle fiche</button>
+    </header>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="etapes">Étapes</button>
+      <button type="button" class="tab-btn" data-tab="site">Informations du site</button>
+    </div>
+
+    <main class="fiche-main">
+      <div id="tab-etapes" class="tab-panel active">
+        <section class="category-card">
+          <div id="etapesList" class="fields-list"></div>
+        </section>
+      </div>
+
+      <div id="tab-site" class="tab-panel">
+        <div id="categorySections" class="category-sections"></div>
+
+        <div id="newCategoryRow" class="new-category-row">
+          <button type="button" id="btnShowNewCategory" class="btn btn-secondary">+ Nouvelle catégorie</button>
+          <div id="newCategoryInlineRow" class="inline-form hidden">
+            <input type="text" id="newCategoryInlineInput" placeholder="Nom de la catégorie">
+            <button type="button" id="btnNewCategoryInlineConfirm" class="btn btn-small">Ajouter</button>
+            <button type="button" id="btnNewCategoryInlineCancel" class="btn btn-small btn-ghost">Annuler</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <span id="saveStatus" class="save-status"></span>
+      <button type="button" id="btnSaveFiche" class="btn btn-secondary btn-large">Enregistrer</button>
+      <button type="button" id="btnPreview" class="btn btn-secondary btn-large">Aperçu</button>
+      <button type="button" id="btnExportClient" class="btn btn-secondary btn-large" title="PDF sans l'onglet Étapes, réservé à l'usage interne">Exporter en PDF (client)</button>
+      <button type="button" id="btnExport" class="btn btn-primary btn-large">Exporter en PDF</button>
+    </footer>
+  </section>
+
+  <!-- DIALOG CONFIRMATION -->
+  <dialog id="confirmDialog" class="confirm-dialog">
+    <p id="confirmMessage"></p>
+    <div class="dialog-actions">
+      <button type="button" id="confirmCancelBtn" class="btn btn-ghost">Annuler</button>
+      <button type="button" id="confirmOkBtn" class="btn btn-danger">Confirmer</button>
+    </div>
+  </dialog>
+
+  <!-- DIALOG REPRISE DE BROUILLON -->
+  <dialog id="draftDialog" class="confirm-dialog">
+    <h2 class="dialog-title">Fiche non terminée</h2>
+    <p id="draftMessage"></p>
+    <div class="dialog-actions">
+      <button type="button" id="draftDiscardBtn" class="btn btn-ghost">Ignorer et supprimer</button>
+      <button type="button" id="draftResumeBtn" class="btn btn-primary">Reprendre</button>
+    </div>
+  </dialog>
+
+  <!-- DIALOG SAISIE GENERIQUE (liste des choix d'un champ) -->
+  <dialog id="promptDialog" class="prompt-dialog">
+    <h2 class="dialog-title" id="promptTitle"></h2>
+    <p class="dialog-hint" id="promptHint"></p>
+    <input type="text" id="promptInput" autocomplete="off">
+    <div class="dialog-actions">
+      <button type="button" id="promptCancelBtn" class="btn btn-ghost">Annuler</button>
+      <button type="button" id="promptOkBtn" class="btn btn-primary">Valider</button>
+    </div>
+  </dialog>
+
+  <!-- DIALOG INFOS DE L'INTERVENTION -->
+  <dialog id="infoDialog" class="info-dialog">
+    <h2 class="dialog-title">Informations de l'intervention</h2>
+
+    <div class="field">
+      <label for="editTechnicien">Nom du technicien *</label>
+      <input type="text" id="editTechnicien" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="editSite">Nom du site *</label>
+      <input type="text" id="editSite" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="editAdresse">Adresse du site *</label>
+      <input type="text" id="editAdresse" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="editDate">Date *</label>
+      <input type="date" id="editDate">
+    </div>
+    <div class="field">
+      <label for="editTelephone">Téléphone (facultatif)</label>
+      <input type="tel" id="editTelephone" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="editEmail">Email (facultatif)</label>
+      <input type="email" id="editEmail" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label>Photo du site (facultatif)</label>
+      <div class="photo-picker">
+        <div class="photo-picker-preview" id="editPhotoPreview">
+          <span class="photo-picker-empty">Aucune photo — la couverture utilisera un bandeau de couleur</span>
+        </div>
+        <div class="photo-picker-actions">
+          <button type="button" id="btnEditPhotoPick" class="btn btn-small btn-secondary">Choisir une photo</button>
+          <button type="button" id="btnEditPhotoRemove" class="btn btn-small btn-ghost hidden">Retirer</button>
+        </div>
+        <input type="file" id="editPhotoInput" class="hidden" accept="image/*">
+      </div>
+    </div>
+
+    <div class="dialog-actions">
+      <button type="button" id="infoCancelBtn" class="btn btn-ghost">Annuler</button>
+      <button type="button" id="infoSaveBtn" class="btn btn-primary">Enregistrer</button>
+    </div>
+  </dialog>
+
+  <!-- APERCU -->
+  <div id="previewOverlay" class="preview-overlay">
+    <div class="preview-toolbar">
+      <span>Aperçu de la fiche</span>
+      <div class="preview-toolbar-actions">
+        <button type="button" id="btnExportFromPreview" class="btn btn-primary">Exporter en PDF</button>
+        <button type="button" id="btnClosePreview" class="btn btn-ghost">Fermer</button>
+      </div>
+    </div>
+    <iframe id="previewFrame" class="preview-frame" title="Aperçu de la fiche"></iframe>
+  </div>
+
+  <script src="../shared/reportTemplate.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
